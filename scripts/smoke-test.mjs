@@ -86,7 +86,8 @@ const common = { repoPath: repo, remote: 'origin', branch: 'master', fetchTimeou
   let headCalls = 0
   const r = fakeRun({
     'rev-parse HEAD': () => ({ code: 0, stdout: `${headCalls++ === 0 ? 'aaa1111aaaa' : 'bbb2222bbbb'}\n`, stderr: '' }),
-    'status --porcelain': { stdout: '' },
+    'diff --quiet': { code: 0 },
+    'diff --cached --quiet': { code: 0 },
     'rev-parse --verify refs/remotes/origin/master': { stdout: 'bbb2222bbbb\n' },
     'merge --ff-only origin/master': { stdout: 'Fast-forward\n' },
   })
@@ -99,18 +100,39 @@ const common = { repoPath: repo, remote: 'origin', branch: 'master', fetchTimeou
   console.log('update (applied): ok applied', out.applied)
 }
 
-// --- update: dirty working tree --------------------------------------------
+// --- update: dirty working tree (tracked files) ----------------------------
 {
   const r = fakeRun({
     'rev-parse HEAD': { stdout: 'aaa1111aaaa\n' },
-    'status --porcelain': { stdout: ' M src/x.ts\n' },
+    'diff --quiet': { code: 1 },
+    'diff --cached --quiet': { code: 0 },
   })
   const out = await applyUpdate({
     ...common, gitTimeoutMs: 10000, rebuildTimeoutMs: 10000, rebuildAfterUpdate: false, run: r,
   })
   assert.equal(out.ok, false)
   assert.equal(out.code, 'dirty')
-  console.log('update (dirty): code ==', out.code)
+  console.log('update (dirty tracked): code ==', out.code)
+}
+
+// --- update: untracked scratch dir must NOT block --------------------------
+{
+  let headCalls = 0
+  const r = fakeRun({
+    // Clean tracked tree (diff --quiet exits 0); an untracked dir is invisible
+    // to git diff, exactly like _tmp_plugin_market/ in the real checkout.
+    'rev-parse HEAD': () => ({ code: 0, stdout: `${headCalls++ === 0 ? 'aaa1111aaaa' : 'bbb2222bbbb'}\n`, stderr: '' }),
+    'diff --quiet': { code: 0 },
+    'diff --cached --quiet': { code: 0 },
+    'rev-parse --verify refs/remotes/origin/master': { stdout: 'bbb2222bbbb\n' },
+    'merge --ff-only origin/master': { stdout: 'Fast-forward\n' },
+  })
+  const out = await applyUpdate({
+    ...common, gitTimeoutMs: 10000, rebuildTimeoutMs: 10000, rebuildAfterUpdate: false, run: r,
+  })
+  assert.equal(out.ok, true)
+  assert.equal(out.applied, true)
+  console.log('update (untracked ignored): ok applied', out.applied)
 }
 
 console.log('\nAll smoke tests passed.')

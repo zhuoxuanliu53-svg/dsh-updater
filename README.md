@@ -98,8 +98,8 @@ node "D:\DSH\deepseek-harness\node_modules\.bin\tsdown.cmd"                     
 ## 限制
 
 - 更新对象必须是 git 克隆（`repoPath` 指向一个 git 仓库）；非仓库会提示 `not-a-repo`。
-- 工作区有未提交改动 / 分叉时**不会自动 stash 或合并**，只提示先处理
-  （`dirty` / `conflict`）。
+- 工作区有**已跟踪文件**的未提交改动 / 分叉时**不会自动 stash 或合并**，只提示先处理
+  （`dirty` / `conflict`）。未跟踪的文件/目录（如临时目录）不拦截 —— 快进合并不会触碰它们。
 - 重编译需要联网与完整工具链；失败不回滚已拉取的提交，只提示。
 - 检查/更新路由仅限 loopback。
 - 只提示，不自动重启。

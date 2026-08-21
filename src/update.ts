@@ -63,17 +63,28 @@ export async function applyUpdate(opts: UpdateOptions): Promise<UpdateOutcome> {
   }
   const before = beforeRaw.stdout.trim()
 
-  // Require a clean working tree for a tidy fast-forward.
-  const status = await run('git', gitArgs(repoPath, sslBackend, ['status', '--porcelain']), 10_000)
-  if (status.code !== 0) {
-    return { ok: false, code: 'git', message: '无法读取工作区状态', detail: status.stderr.trim() }
+  // Require a clean working tree over TRACKED files only. Untracked files and
+  // directories are deliberately ignored: a fast-forward merge leaves them
+  // alone, so a stray scratch dir (e.g. _tmp_plugin_market/) must not block an
+  // update. If an untracked path collides with the incoming tree, the merge
+  // below fails with its own clear error instead.
+  const workDiff = await run('git', gitArgs(repoPath, sslBackend, ['diff', '--quiet']), 10_000)
+  if (workDiff.code !== 0 && workDiff.code !== 1) {
+    return { ok: false, code: 'git', message: '无法读取工作区状态', detail: workDiff.stderr.trim() }
   }
-  if (status.stdout.trim() !== '') {
+  const indexDiff = await run('git', gitArgs(repoPath, sslBackend, ['diff', '--cached', '--quiet']), 10_000)
+  if (indexDiff.code !== 0 && indexDiff.code !== 1) {
+    return { ok: false, code: 'git', message: '无法读取暂存区状态', detail: indexDiff.stderr.trim() }
+  }
+  if (workDiff.code === 1 || indexDiff.code === 1) {
+    const parts: string[] = []
+    if (workDiff.code === 1) parts.push('working tree: tracked files modified')
+    if (indexDiff.code === 1) parts.push('index: staged changes')
     return {
       ok: false,
       code: 'dirty',
-      message: '工作区有未提交的改动，请先提交或暂存后再更新（插件不会自动 stash/丢弃）',
-      detail: status.stdout.trim(),
+      message: '工作区有未提交的改动（已跟踪文件），请先提交或暂存后再更新（插件不会自动 stash/丢弃）',
+      detail: parts.join('; '),
     }
   }
 
