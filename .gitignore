@@ -1,0 +1,3 @@
+# Local-only: SDK junctions and smoke-test scratch are environment-specific.
+node_modules/
+.smoke/

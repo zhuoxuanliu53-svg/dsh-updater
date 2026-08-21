@@ -1,0 +1,12 @@
+# dsh-updater bundle patch: inserts the dual-face plugin row into the web
+# profile roster. Applied as a profile bundle layer (the `dsh.bundle.patch`
+# manifest field); install with `dsh plugin --profile web add link:./dsh-updater`
+# or by hand-editing the profile (see README.md "Install").
+#
+# The row is a bare plugin by package name: the node half (exports ".") runs
+# in the host process (the /api/dsh-updater/check and /api/dsh-updater/update
+# routes), and the `dsh.client` declaration in package.json makes the browser
+# half (exports "./client") load in the web GUI with the settings card.
+- insert:
+    - id: dsh-updater
+      name: 'dsh-updater'
