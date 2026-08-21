@@ -24,12 +24,14 @@ export async function run(
   file: string,
   args: readonly string[],
   timeoutMs: number,
+  cwd?: string,
 ): Promise<CommandResult> {
   try {
     const { stdout, stderr } = await execFileAsync(file, [...args], {
       timeout: timeoutMs,
       windowsHide: true,
       maxBuffer: 8 * 1024 * 1024,
+      ...(cwd === undefined ? {} : { cwd }),
     })
     return { code: 0, stdout, stderr }
   } catch (error) {
@@ -43,7 +45,7 @@ export async function run(
 }
 
 /** A command runner injectable by tests. */
-export type CommandRunner = (file: string, args: readonly string[], timeoutMs: number) => Promise<CommandResult>
+export type CommandRunner = (file: string, args: readonly string[], timeoutMs: number, cwd?: string) => Promise<CommandResult>
 
 /** The default runner: child_process.execFile. */
 export const defaultRun: CommandRunner = run

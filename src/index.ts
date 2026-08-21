@@ -41,14 +41,20 @@ export const inject = ['webServer', 'settings']
 /** Settings namespace of the dsh-updater capability. */
 export const UPDATER_SETTINGS_NAMESPACE = settingsNamespace('dsh-updater')
 
-/** Default git checkout this plugin manages. */
-export const DEFAULT_REPO_PATH = 'D:\\DSH\\deepseek-harness'
+/** Default git checkout this plugin manages. Empty: the user points it at their own clone. */
+export const DEFAULT_REPO_PATH = ''
 export const DEFAULT_REMOTE = 'origin'
 export const DEFAULT_BRANCH = 'master'
 const DEFAULT_FETCH_TIMEOUT_MS = 30_000
 const DEFAULT_GIT_TIMEOUT_MS = 60_000
 const DEFAULT_REBUILD_TIMEOUT_MS = 600_000
-const DEFAULT_SSL_BACKEND = 'openssl'
+/**
+ * TLS backend for git. Windows git defaults to schannel, whose credential
+ * store is commonly broken (SEC_E_NO_CREDENTIALS), so on Windows we pin the
+ * bundled OpenSSL backend. On macOS/Linux the native backend is fine and we
+ * leave it untouched (empty string = don't pass `-c http.sslBackend=...`).
+ */
+const DEFAULT_SSL_BACKEND = process.platform === 'win32' ? 'openssl' : ''
 
 /** Plugin config, validated by the matched schemastery schema. */
 export interface Config {

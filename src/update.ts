@@ -36,12 +36,27 @@ async function logRun(
   file: string,
   args: readonly string[],
   timeoutMs: number,
+  cwd?: string,
+  label?: string,
 ): Promise<number> {
-  const result = await run(file, args, timeoutMs)
-  log.push(`$ ${file} ${args.join(' ')}`)
+  const result = await run(file, args, timeoutMs, cwd)
+  log.push(`$ ${label ?? `${file} ${args.join(' ')}`}`)
   if (result.stdout.trim()) log.push(result.stdout.trim())
   if (result.stderr.trim()) log.push(result.stderr.trim())
   return result.code ?? -1
+}
+
+/**
+ * Build the argv for one `pnpm` invocation that works cross-platform. On
+ * Windows `pnpm` is a `.CMD` shim that `execFile` cannot spawn directly
+ * (it fails with ENOENT/EINVAL), so route it through `cmd.exe /d /s /c`.
+ * On macOS/Linux the `pnpm` shebang script is executable directly.
+ */
+function pnpmCommand(sub: readonly string[]): { file: string; args: string[] } {
+  if (process.platform === 'win32') {
+    return { file: 'cmd.exe', args: ['/d', '/s', '/c', 'pnpm', ...sub] }
+  }
+  return { file: 'pnpm', args: [...sub] }
 }
 
 /**
@@ -113,9 +128,11 @@ export async function applyUpdate(opts: UpdateOptions): Promise<UpdateOutcome> {
   let rebuilt = false
   if (opts.rebuildAfterUpdate) {
     log.push('-- rebuild --')
-    const installCode = await logRun(log, run, 'pnpm', ['install'], opts.rebuildTimeoutMs)
+    const install = pnpmCommand(['install'])
+    const installCode = await logRun(log, run, install.file, install.args, opts.rebuildTimeoutMs, repoPath, 'pnpm install')
     if (installCode === 0) {
-      const buildCode = await logRun(log, run, 'pnpm', ['run', 'build'], opts.rebuildTimeoutMs)
+      const build = pnpmCommand(['run', 'build'])
+      const buildCode = await logRun(log, run, build.file, build.args, opts.rebuildTimeoutMs, repoPath, 'pnpm run build')
       rebuilt = buildCode === 0
       if (!rebuilt) log.push('rebuild: pnpm run build 未成功')
     } else {

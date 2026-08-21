@@ -151,7 +151,7 @@ export function UpdaterCard(props: UpdaterCardProps) {
           disabled={!ready || busy !== undefined}
           onBlur={() => { void commitRepoPath() }}
           onChange={(event) => setRepoDraft(event.target.value)}
-          placeholder="D:\DSH\deepseek-harness"
+          placeholder={t('repoPathPlaceholder')}
         />
         <small>{t('repoPathHint')}</small>
       </label>

@@ -26,8 +26,8 @@ export declare const name = "dsh-updater";
 export declare const inject: string[];
 /** Settings namespace of the dsh-updater capability. */
 export declare const UPDATER_SETTINGS_NAMESPACE: import("@deepseek-ai/dsh-settings").SettingsNamespace;
-/** Default git checkout this plugin manages. */
-export declare const DEFAULT_REPO_PATH = "D:\\DSH\\deepseek-harness";
+/** Default git checkout this plugin manages. Empty: the user points it at their own clone. */
+export declare const DEFAULT_REPO_PATH = "";
 export declare const DEFAULT_REMOTE = "origin";
 export declare const DEFAULT_BRANCH = "master";
 /** Plugin config, validated by the matched schemastery schema. */

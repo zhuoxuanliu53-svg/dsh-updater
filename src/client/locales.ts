@@ -9,6 +9,7 @@ export type UpdaterKey =
   | 'nav'
   | 'repoPathLabel'
   | 'repoPathHint'
+  | 'repoPathPlaceholder'
   | 'check'
   | 'checking'
   | 'update'
@@ -42,6 +43,7 @@ export const zh: UpdaterDict = {
   nav: '检查更新',
   repoPathLabel: '源码路径',
   repoPathHint: 'DeepSeek Harness 的 git 源码克隆路径（远程为官方 deepseek-ai/deepseek-harness）',
+  repoPathPlaceholder: '请输入源码克隆的绝对路径',
   check: '检查更新',
   checking: '检查中…',
   update: '更新',
@@ -73,6 +75,7 @@ export const en: UpdaterDict = {
   nav: 'Check updates',
   repoPathLabel: 'Source path',
   repoPathHint: 'Path to the DeepSeek Harness git checkout (remote is the official deepseek-ai/deepseek-harness)',
+  repoPathPlaceholder: 'Absolute path to your harness checkout',
   check: 'Check update',
   checking: 'Checking…',
   update: 'Update',

@@ -12,9 +12,9 @@ export interface CommandResult {
     stderr: string;
 }
 /** Spawn `file args` with a timeout cap, silently capturing output. */
-export declare function run(file: string, args: readonly string[], timeoutMs: number): Promise<CommandResult>;
+export declare function run(file: string, args: readonly string[], timeoutMs: number, cwd?: string): Promise<CommandResult>;
 /** A command runner injectable by tests. */
-export type CommandRunner = (file: string, args: readonly string[], timeoutMs: number) => Promise<CommandResult>;
+export type CommandRunner = (file: string, args: readonly string[], timeoutMs: number, cwd?: string) => Promise<CommandResult>;
 /** The default runner: child_process.execFile. */
 export declare const defaultRun: CommandRunner;
 /** Whether a path exists and is a directory (cheap git-repo probe). */

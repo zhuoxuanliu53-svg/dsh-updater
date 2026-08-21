@@ -4,7 +4,7 @@
  * locale namespace.
  */
 /** Copy message keys for the dsh-updater settings card. */
-export type UpdaterKey = 'nav' | 'repoPathLabel' | 'repoPathHint' | 'check' | 'checking' | 'update' | 'updating' | 'rebuildToggle' | 'rebuildHint' | 'notChecked' | 'current' | 'remote' | 'behind' | 'upToDate' | 'hasUpdate' | 'networkError' | 'notARepo' | 'dirty' | 'conflict' | 'gitError' | 'unknownError' | 'updatedHint' | 'updateNoChange' | 'rebuildDone' | 'rebuildSkipped' | 'logTitle' | 'configError';
+export type UpdaterKey = 'nav' | 'repoPathLabel' | 'repoPathHint' | 'repoPathPlaceholder' | 'check' | 'checking' | 'update' | 'updating' | 'rebuildToggle' | 'rebuildHint' | 'notChecked' | 'current' | 'remote' | 'behind' | 'upToDate' | 'hasUpdate' | 'networkError' | 'notARepo' | 'dirty' | 'conflict' | 'gitError' | 'unknownError' | 'updatedHint' | 'updateNoChange' | 'rebuildDone' | 'rebuildSkipped' | 'logTitle' | 'configError';
 /** A locale dictionary mapping every key to a string. */
 export type UpdaterDict = Record<UpdaterKey, string>;
 /** Chinese copy. */

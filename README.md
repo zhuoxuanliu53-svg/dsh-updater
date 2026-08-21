@@ -8,7 +8,7 @@ dsh-updater 是**热插拔**的：通过 profile 装配，不改任何 dsh 源�
 
 ## 它能做什么
 
-- **检查更新**：对本地 git 源码克隆（默认 `D:\DSH\deepseek-harness`，其 `origin` 即官方
+- **检查更新**：对本地 git 源码克隆（首次使用需在卡片里填写源码路径；其 `origin` 即官方
   `https://github.com/deepseek-ai/deepseek-harness`）执行 `git fetch`，对比本地 `HEAD` 与
   官方 `origin/master`，显示 当前提交 / 官方最新 / 落后 N 个提交。
 - **更新**：执行 `git merge --ff-only origin/master` 拉取官方最新并显示日志。
@@ -58,14 +58,14 @@ dsh-updater 是**热插拔**的：通过 profile 装配，不改任何 dsh 源�
 
 | 字段 | 默认 | 说明 |
 |---|---|---|
-| `repoPath` | `D:\DSH\deepseek-harness` | git 源码克隆的绝对路径 |
+| `repoPath` | （空） | git 源码克隆的绝对路径；首次使用请在卡片里填写 |
 | `remote` | `origin` | 远程名（官方上游） |
 | `branch` | `master` | 跟踪分支 |
 | `fetchTimeoutMs` | 30000 | 检查时 git fetch 超时 |
 | `gitTimeoutMs` | 60000 | 更新时 git merge 超时 |
 | `rebuildTimeoutMs` | 600000 | 每个重编译命令超时 |
 | `rebuildAfterUpdate` | false | 更新后是否自动重编译 |
-| `sslBackend` | openssl | git TLS 后端：`openssl`（默认）或 `schannel`；Windows 上 schannel 凭据库不可用时必须用 `openssl` |
+| `sslBackend` | Windows: `openssl`；其他: （空） | git TLS 后端。仅 Windows 默认用 `openssl` 绕开 schannel 凭据库故障（SEC_E_NO_CREDENTIALS）；其他平台留空用 git 原生后端 |
 
 ## 构建
 
@@ -87,7 +87,8 @@ node "D:\DSH\deepseek-harness\node_modules\.bin\tsdown.cmd"                     
 - **Host**：`src/index.ts` 用 `installSettingsSection` 注册 `dsh-updater` 设置名字空间，
   经 `ctx.webServer` 挂载 `/api/dsh-updater/check`、`/api/dsh-updater/update` 与
   `/api/dsh-updater/config`（loopback-only）。`src/api.ts` 做 git 对比，`src/update.ts`
-  做 ff 合并 + 可选重编译。
+  做 ff 合并 + 可选重编译（`pnpm` 以跨平台方式调用：Windows 上经 `cmd.exe` 包装
+  `.CMD` shim，并显式把 `cwd` 设为源码目录）。
 - **Client**：`src/client/index.ts` 用官方 `settings.section` 槽注册设置卡片
   （`src/client/UpdaterCard.tsx`），不依赖任何兄弟 UI 组。卡片两个可编辑字段
   （源码路径、重编译开关）走插件自己的 `/api/dsh-updater/config` 路由读写，

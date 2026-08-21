@@ -10,7 +10,9 @@ import { checkUpdate, applyUpdate } from '../lib/index.js'
 /** Build a fake runner keyed by argv tails. */
 function fakeRun(behaviors) {
   return async (file, args, timeoutMs) => {
-    const key = [...args].slice(2).join(' ') // drop ['-C', repo]
+    // git args carry `['-C', repo]` first; other commands (pnpm/cmd.exe) key
+    // on their full argv so the rebuild path is testable across platforms.
+    const key = file === 'git' ? [...args].slice(2).join(' ') : `${file} ${args.join(' ')}`
     const behavior = behaviors[key] ?? behaviors.default
     if (behavior == null) throw new Error(`no behavior for: ${key}`)
     if (typeof behavior === 'function') return behavior(...args)
@@ -133,6 +135,30 @@ const common = { repoPath: repo, remote: 'origin', branch: 'master', fetchTimeou
   assert.equal(out.ok, true)
   assert.equal(out.applied, true)
   console.log('update (untracked ignored): ok applied', out.applied)
+}
+
+// --- update: rebuild runs pnpm in the repo (cross-platform) ----------------
+{
+  const isWin = process.platform === 'win32'
+  const installKey = isWin ? 'cmd.exe /d /s /c pnpm install' : 'pnpm install'
+  const buildKey = isWin ? 'cmd.exe /d /s /c pnpm run build' : 'pnpm run build'
+  let headCalls = 0
+  const r = fakeRun({
+    'rev-parse HEAD': () => ({ code: 0, stdout: `${headCalls++ === 0 ? 'aaa1111aaaa' : 'bbb2222bbbb'}\n`, stderr: '' }),
+    'diff --quiet': { code: 0 },
+    'diff --cached --quiet': { code: 0 },
+    'rev-parse --verify refs/remotes/origin/master': { stdout: 'bbb2222bbbb\n' },
+    'merge --ff-only origin/master': { stdout: 'Fast-forward\n' },
+    [installKey]: { code: 0, stdout: 'install ok\n' },
+    [buildKey]: { code: 0, stdout: 'build ok\n' },
+  })
+  const out = await applyUpdate({
+    ...common, gitTimeoutMs: 10000, rebuildTimeoutMs: 10000, rebuildAfterUpdate: true, run: r,
+  })
+  assert.equal(out.ok, true)
+  assert.equal(out.applied, true)
+  assert.equal(out.rebuilt, true)
+  console.log('update (rebuild): ok rebuilt', out.rebuilt)
 }
 
 console.log('\nAll smoke tests passed.')
